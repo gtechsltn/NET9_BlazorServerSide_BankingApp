@@ -46,6 +46,43 @@ cd BankingApp
 dotnet add package Microsoft.EntityFrameworkCore
 dotnet add package Microsoft.EntityFrameworkCore.SqlServer
 dotnet add package Microsoft.EntityFrameworkCore.Tools
+dotnet add package Microsoft.AspNetCore.Identity.EntityFrameworkCore
+dotnet add package Microsoft.Extensions.Configuration
+```
+
+## Multiple environments configuration files
++ appsettings.Development.json
++ appsettings.Staging.json
++ appsettings.Production.json
+
+For Example (appsettings.Production.json):
+
+```
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=localhost;Database=BankingApp;Trusted_Connection=True;"
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft": "Warning",
+      "Microsoft.Hosting.Lifetime": "Information"
+    }
+  },
+  "EnvironmentSpecificSetting": "DevelopmentSetting"
+}
+```
+
+## Program.cs
+```
+var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container
+builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
+    .AddEnvironmentVariables();
+
+var app = builder.Build();
 ```
 
 ## Create the Database Context: Define a BankingDbContext class to interact with the database:
@@ -54,6 +91,8 @@ using Microsoft.EntityFrameworkCore;
 
 public class BankingDbContext : DbContext
 {
+    public BankingDbContext(DbContextOptions<BankingDbContext> options) : base(options) { }
+
     public DbSet<Account> Accounts { get; set; }
     public DbSet<Transaction> Transactions { get; set; }
 
@@ -77,10 +116,20 @@ dotnet ef database update
 dotnet add package Microsoft.AspNetCore.Identity.EntityFrameworkCore
 ```
 
-## Configure Identity in Startup.cs: Register Identity services:
+## Configure And Register Identity services:
 ```
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<BankingDbContext>();
+
+builder.Services.AddDefaultIdentity<IdentityUser>()
+    .AddRoles<IdentityRole>()
+    .AddEntityFrameworkStores<BankingDbContext>();
+```
+
+## Register DbContext in Dependency Injection:
+```
+builder.Services.AddDbContext<BankingDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 ```
 
 ## Protect Pages: Use the [Authorize] attribute to restrict access:
@@ -156,9 +205,23 @@ public class BankingService
 builder.Services.AddScoped<BankingService>();
 ```
 
+## Monitor and Maintain
+
+### Logging and Monitoring:
++ Use tools like Serilog or Application Insights for logging.
++ Monitor performance, errors, and usage analytics.
+
+### Regular Updates:
+Keep dependencies and frameworks up-to-date to ensure security and performance.
+
 # 8. Test and Debug
 + Run the application locally using dotnet run or the IDE's debug mode.
 + Use Postman or Swagger for API testing (if needed).
+
+## Testing for Multiple Environments
++ Development: Test with local database and mock services.
++ Staging: Test in a near-production environment with production-like configurations.
++ Production: Monitor and test in production with real user data using Application Insights or similar tools.
 
 # 9. Secure the Application
 
