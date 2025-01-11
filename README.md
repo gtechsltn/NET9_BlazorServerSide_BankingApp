@@ -6,6 +6,14 @@ https://mobidev.biz/blog/blazing-a-trail-web-app-development-with-microsoft-blaz
 
 ![Blazor Server Architecture](https://github.com/user-attachments/assets/85a356ca-1bd4-41d0-9944-8ed1c92f712f)
 
+# Basic Features:
++ Authentication and Authorization: Login, register, and role-based access.
++ Dashboard: Overview of account details and balance.
++ Account Management: View account details, add/remove accounts.
++ Transactions: Perform fund transfers and view transaction history.
++ Admin Panel: Manage users and accounts.
++ Security Features: Encrypt sensitive data and enforce HTTPS.
+
 # 1. Set Up the Development Environment
 
 ## Install Prerequisites:
@@ -103,6 +111,16 @@ public class BankingDbContext : DbContext
 }
 ```
 
+```
+public class Account
+{
+    public int AccountId { get; set; }
+    public string AccountNumber { get; set; }
+    public string AccountHolder { get; set; }
+    public decimal Balance { get; set; }
+}
+```
+
 ## Run Migrations: Create and apply migrations:
 ```
 dotnet ef migrations add InitialCreate
@@ -145,7 +163,66 @@ builder.Services.AddDbContext<BankingDbContext>(options =>
 + Transaction History: TransactionHistory.razor
 + Fund Transfer: TransferFunds.razor
 
-Example for viewing account details:
+
+### Dashboard.razor
+```
+@page "/dashboard"
+@inject BankingService BankingService
+
+<h3>Welcome, @userName!</h3>
+<h4>Your Accounts</h4>
+
+<ul>
+    @foreach (var account in accounts)
+    {
+        <li>@account.AccountNumber: $@account.Balance</li>
+    }
+</ul>
+
+@code {
+    private string userName = "User";
+    private List<Account> accounts = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        accounts = await BankingService.GetAccountsAsync();
+    }
+}
+```
+
+### Transaction.razor
+```
+@page "/transaction"
+@inject BankingService BankingService
+
+<h3>Transfer Funds</h3>
+
+<form>
+    <label for="from">From Account:</label>
+    <input id="from" @bind="fromAccount" />
+
+    <label for="to">To Account:</label>
+    <input id="to" @bind="toAccount" />
+
+    <label for="amount">Amount:</label>
+    <input id="amount" type="number" @bind="amount" />
+
+    <button @onclick="TransferFunds">Submit</button>
+</form>
+
+@code {
+    private string fromAccount;
+    private string toAccount;
+    private decimal amount;
+
+    private async Task TransferFunds()
+    {
+        await BankingService.TransferFunds(fromAccount, toAccount, amount);
+    }
+}
+```
+
+### Acount Details
 
 ```
 @page "/account/{accountId}"
@@ -218,6 +295,10 @@ Keep dependencies and frameworks up-to-date to ensure security and performance.
 + Run the application locally using dotnet run or the IDE's debug mode.
 + Use Postman or Swagger for API testing (if needed).
 
+## Testing and Debugging
++ Unit Tests: Write tests for services using xUnit or NUnit.
++ Manual Testing: Test account creation, transactions, and authentication.
+
 ## Testing for Multiple Environments
 + Development: Test with local database and mock services.
 + Staging: Test in a near-production environment with production-like configurations.
@@ -228,6 +309,11 @@ Keep dependencies and frameworks up-to-date to ensure security and performance.
 ## Data Protection:
 + Use HTTPS for all communications.
 + Encrypt sensitive data (e.g., passwords, transactions).
++ Enforce HTTPS: Add app.UseHttpsRedirection(); in Program.cs.
++ Validate Input:
+  + Use validation attributes like [Required], [MaxLength], etc.
+  + Add server-side validation to prevent injection attacks.
+  + Encrypt Sensitive Data: Use encryption for sensitive information such as passwords.
 
 ## Authentication
 + Implement JWT Tokens or ASP.NET Core Identity for secure login.
