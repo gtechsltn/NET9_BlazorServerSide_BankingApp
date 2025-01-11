@@ -1,5 +1,9 @@
 # Build a Banking App using Blazor Server App in .NET 9.0
 
+https://github.com/gtechsltn/Python_RESTful_API/
+
+https://github.com/gtechsltn/NET9_BlazorServerSide_BankingApp/
+
 **Blazor Server vs Blazor WebAssembly**
 
 https://mobidev.biz/blog/blazing-a-trail-web-app-development-with-microsoft-blazor
